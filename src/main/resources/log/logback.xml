@@ -1,0 +1,27 @@
+<?xml version="1.0" encoding="UTF-8" ?>
+<configuration debug="true">
+    　　　　　　
+    <appender name="STDOUT" class="ch.qos.logback.core.ConsoleAppender">
+        　　　　　　
+        <encoder>
+            <!--日志输出格式-->
+            <!--依次为：时间、日志级别、线程名称、打印日志的类、日志的主体内容、换行-->
+            <pattern>[%d{HH:mm:ss.SSS}] [%-5level] [%thread] [%logger] [%msg]%n</pattern>
+            　　　　　　
+        </encoder>
+        　　　　　　
+    </appender>
+
+    <!--设置全局日志级别-->
+    <!--任何一个直至级别都只打印当前级别和之后级别的日志-->　　　　　　
+    <root level="INFO">
+
+        <!--指定打印日志的appender，这里通过STDOUT引用了前面配置的appender-->　　　　　　　　
+        <appender-ref ref="STDOUT"/>
+        　　　　　　
+    </root>
+
+    <!--根据特殊需求制定局部日志级别-->
+    <logger name="com.test.dao.*" level="DEBUG"/>
+
+</configuration>

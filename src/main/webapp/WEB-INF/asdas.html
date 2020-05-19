@@ -1,0 +1,42 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+   <meta charset="UTF-8">
+   <title>Title</title>
+</head>
+<body>
+<form id="assignRolesForm" action="${pageContext.request.contextPath}/assign/doAssign" method="post"
+      role="form"
+      class="form-inline">
+   <input type="hidden" name="adminId" value="${param.adminId}">
+   <div class="form-group">
+      <label for="unassignedRoles">未分配角色列表</label><br>
+      <select id="unassignedRoles" class="form-control" multiple="multiple" size="10"
+              style="width:100px;overflow-y:auto;">
+         <c:forEach items="${requestScope.unassignedRoles}" var="role">
+            <option value="${role.roleId}">${role.roleName}</option>
+         </c:forEach>
+      </select>
+   </div>
+   <div class="form-group">
+      <ul>
+         <li id="toRightBtn" class="btn btn-default glyphicon glyphicon-chevron-right"></li>
+         <br/>
+         <li id="toLeftBtn" class="btn btn-default glyphicon glyphicon-chevron-left"
+             style="margin-top:20px;"></li>
+      </ul>
+   </div>
+   <div class="form-group" style="margin-left:40px;">
+      <label for="assignedRoles">已分配角色列表</label><br>
+      <select name="assignedRoles" id="assignedRoles" class="form-control" multiple="multiple"
+              size="10"
+              style="width:100px;overflow-y:auto;">
+         <c:forEach items="${requestScope.assignedRoles}" var="role">
+            <option value="${role.roleId}">${role.roleName}</option>
+         </c:forEach>
+      </select>
+      <button type="submit" class="btn btn-sm btn-success btn-block">保存</button>
+   </div>
+</form>
+</body>
+</html>

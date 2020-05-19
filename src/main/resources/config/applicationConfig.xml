@@ -1,0 +1,92 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+       xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+       xmlns:context="http://www.springframework.org/schema/context"
+       xmlns:aop="http://www.springframework.org/schema/aop" xmlns:tx="http://www.springframework.org/schema/tx"
+       xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd http://www.springframework.org/schema/context https://www.springframework.org/schema/context/spring-context.xsd http://www.springframework.org/schema/aop https://www.springframework.org/schema/aop/spring-aop.xsd http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx.xsd">
+
+    <!--开启自动扫描-->
+    <context:component-scan base-package="com.test">
+        <context:exclude-filter type="annotation" expression="org.springframework.stereotype.Controller"/>
+    </context:component-scan>
+
+    <!--加载外部属性文件-->
+    <context:property-placeholder location="classpath:properties/jdbcConfig.properties"/>
+    <!--==================================Mybatis配置=====================================-->
+    <!--配置数据源-->
+    <bean id="dataSource" class="com.mchange.v2.c3p0.ComboPooledDataSource">
+        <property name="user" value="${jdbc.username}"/>
+        <property name="password" value="${jdbc.password}"/>
+        <property name="jdbcUrl" value="${jdbc.url}"/>
+        <property name="driverClass" value="${jdbc.driver}"/>
+    </bean>
+
+    <!--配置SqlSessionFactoryBean整合Mybatis-->
+    <bean id="sqlSessionFactory" class="org.mybatis.spring.SqlSessionFactoryBean">
+        <!--指定MyBatis全局配置文件位置-->
+        <property name="configLocation" value="classpath:config/myBatisConfig.xml"/>
+        <!--配置源文件-->
+        <property name="dataSource" ref="dataSource"/>
+        <!--指定Mapper.xml文件位置-->
+        <property name="mapperLocations" value="classpath:mapper/*.xml"/>
+    </bean>
+
+    <!--配置MapperScannerConfigurer来扫描Mapper接口所在的包-->
+    <bean id="mapperScannerConfigurer" class="org.mybatis.spring.mapper.MapperScannerConfigurer">
+        <property name="basePackage" value="com.test.dao.mapper"/>
+    </bean>
+
+    <!--===================配置一个可以批量的SqlSession==========================-->
+    <bean id="sessionTemplate" class="org.mybatis.spring.SqlSessionTemplate">
+        <constructor-arg name="sqlSessionFactory" ref="sqlSessionFactory"/>
+        <constructor-arg name="executorType" value="BATCH"/>
+    </bean>
+
+    <!--==================================事务配置=====================================-->
+    <!--配置事务管理器-->
+    <bean id="transactionManager" class="org.springframework.jdbc.datasource.DataSourceTransactionManager">
+        <!--装配数据源-->
+        <property name="dataSource" ref="dataSource"/>
+    </bean>
+
+    <!--配置事务切面-->
+    <aop:config>
+        <!--考虑到正和SpringSecurity，避免UserDetailsService加入事务，所以到定位到impl-->
+        <aop:pointcut id="txPointcut" expression="execution(* com.test.service.impl..*(..))"/>
+        <!--事务通知和切入表达式关联-->
+        <aop:advisor advice-ref="txAdvice" pointcut-ref="txPointcut"/>
+    </aop:config>
+
+
+    <!--配置事务通知-->
+    <tx:advice id="txAdvice" transaction-manager="transactionManager">
+        <!--事务属性配置-->
+        <tx:attributes>
+            <!--配置查询指定名称的方法为只读属性-->
+            <tx:method name="get*" read-only="true"/>
+            <tx:method name="find*" read-only="true"/>
+            <tx:method name="query*" read-only="true"/>
+            <tx:method name="count*" read-only="true"/>
+            <!--配置增删改指定名称的事务传播行为和回滚异常-->
+            <!--
+            propagation属性：
+                REQUIRED：支持当前事务，如果当前没有事务，就新建一个事务。这是最常见的选择。
+                SUPPORTS：支持当前事务，如果当前没有事务，就以非事务方式执行。
+                MANDATORY：支持当前事务，如果当前没有事务，就抛出异常。
+                REQUIRES_NEW：新建事务，如果当前存在事务，把当前事务挂起。
+                NOT_SUPPORTED：以非事务方式执行操作，如果当前存在事务，就把当前事务挂起。
+                NEVER：以非事务方式执行，如果当前存在事务，则抛出异常。
+                NESTED：支持当前事务，如果当前事务存在，则执行一个嵌套事务，如果当前没有事务，就新建一个事务
+            -->
+            <!--
+                rollback-for属性指定针对什么异常回滚
+                默认：RuntimeException
+             -->
+            <tx:method name="save*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+            <tx:method name="update*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+            <tx:method name="remove*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+            <tx:method name="batch*" propagation="REQUIRES_NEW" rollback-for="java.lang.Exception"/>
+        </tx:attributes>
+    </tx:advice>
+
+</beans>
